@@ -14,7 +14,7 @@ function AllBoard() {
           ...doc.data(),
         }));
         setBoardData(data);
-        console.log("데이터 불러오기 성공: ", data);
+        console.log("데이터 불러오기성공: ", data);
       } catch (error) {
         console.error("데이터를 불러오는 중 오류 발생: ", error);
       }
