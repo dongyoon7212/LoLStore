@@ -1,7 +1,7 @@
 import { firestore } from "../BE/firebase.js";
 import { collection, getDocs } from "firebase/firestore";
 import { useState } from "react";
-import SearchResult from "./SearchResult.js";
+import ItemDetail from "./ItemDetail.js";
 
 function GetBoard() {
   const [searchItemName, setsearchItemName] = useState("");
@@ -61,7 +61,7 @@ function GetBoard() {
           </button>
         </div>
       </form>
-      <SearchResult boardData={boardData} />
+      {boardData.length > 0 && <ItemDetail itemId={boardData[0].id} />}
     </div>
   );
 }

@@ -1,14 +1,29 @@
 import React from "react";
 import { firestore } from "../BE/firebase.js";
 import { collection, getDocs } from "firebase/firestore";
-import { useState } from "react";
+import { onAuthStateChanged, getAuth } from "firebase/auth";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import ItemDetail from "./ItemDetail.js";
 
 function Main() {
   const [searchItemName, setsearchItemName] = useState("");
-  const [boardData, setBoardData] = useState([]);
+  const [, setBoardData] = useState([]);
   const [itemId, setItemId] = useState(null);
   const [showItemDetail, setShowItemDetail] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+  const auth = getAuth();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [auth]);
 
   const handleInputSearchDoc = (e) => {
     setsearchItemName(e.target.value);
@@ -16,6 +31,10 @@ function Main() {
 
   const handleSearchDoc = async (e) => {
     e.preventDefault();
+    if (!isLoggedIn) {
+      alert("로그인이 필요한 서비스 입니다.");
+      navigate("/Login");
+    }
 
     const fetchData = async () => {
       try {
@@ -60,7 +79,7 @@ function Main() {
           />
           <div className="text-center lg:w-2/3 justify-center w-full">
             <h1 className="title-font sm:text-4xl text-4xl mb-4 my-10 font-medium text-lolGold">
-              소환사 협곡에 오신 걸 환영합니다.
+              심술 두꺼비 상점에 오신 걸 환영합니다.
             </h1>
             <form onSubmit={handleSearchDoc}>
               <div className="flex flex-row item-center gap-6 my-10">
@@ -89,7 +108,9 @@ function Main() {
             </form>
           </div>
         </div>
-        <div className="max-w-4xl mx-auto mt-10">{showItemDetail && <ItemDetail itemId={itemId} />}</div>
+        <div className="max-w-4xl mx-auto mt-10">
+          {showItemDetail && <ItemDetail itemId={itemId} />}
+        </div>
       </section>
     </div>
   );

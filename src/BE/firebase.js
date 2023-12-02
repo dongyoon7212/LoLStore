@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   // firebase 설정과 관련된 개인 정보
@@ -18,4 +19,6 @@ const app = initializeApp(firebaseConfig);
 // firebase의 firestore 인스턴스를 변수에 저장
 const firestore = getFirestore(app);
 
-export { firestore };
+const auth = getAuth(app);
+
+export { firestore, auth };

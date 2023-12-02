@@ -1,29 +1,76 @@
 import React, { useEffect, useState } from "react";
-import { firestore } from "../BE/firebase.js";
-import { doc, getDoc } from "firebase/firestore";
+import { firestore, auth } from "../BE/firebase.js";
+import { useNavigate } from "react-router-dom";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+} from "firebase/firestore";
 
 function ItemDetail({ itemId }) {
   const [itemDetail, setItemDetail] = useState(null);
+  const [isLiked, setIsLiked] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchItemDetail = async () => {
+      // console.log(itemId);
       try {
         const itemDoc = await getDoc(doc(firestore, "Tables", itemId));
         if (itemDoc.exists()) {
           setItemDetail(itemDoc.data());
         } else {
-          console.log("문서를 찾을 수 없습니다.");
+          // console.log("문서를 찾을 수 없습니다.");
         }
       } catch (error) {
-        console.error("데이터를 불러오는 중 오류 발생: ", error);
+        // console.error("데이터를 불러오는 중 오류 발생: ", error);
       }
     };
 
     fetchItemDetail();
   }, [itemId]);
 
-  const handleGoBack = () => {
-    // 페이지 새로고침
+  useEffect(() => {
+    const checkLikedStatus = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const userDocRef = doc(firestore, "Likes", user.uid);
+        const userDocSnapshot = await getDoc(userDocRef);
+
+        if (userDocSnapshot.exists()) {
+          const likedItems = userDocSnapshot.data().likedItems || [];
+          setIsLiked(likedItems.includes(itemId));
+        }
+      }
+    };
+    checkLikedStatus();
+  }, [itemId]);
+
+  const handleLikeToggle = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      const userDocRef = doc(firestore, "Likes", user.uid);
+
+      if (isLiked) {
+        // 좋아요 취소
+        await updateDoc(userDocRef, {
+          likedItems: arrayRemove(itemId),
+        });
+      } else {
+        // 좋아요 추가
+        await updateDoc(userDocRef, {
+          likedItems: arrayUnion(itemId),
+        });
+      }
+
+      setIsLiked((prev) => !prev);
+    }
+  };
+
+  const handleGoBack = (e) => {
+    navigate("/");
     window.location.reload();
   };
 
@@ -71,19 +118,12 @@ function ItemDetail({ itemId }) {
                 <span className="title-font font-medium text-2xl text-itemPriceColor">
                   {itemDetail.price}
                 </span>
-                {/* 하트버튼 */}
-                {/* <button className="rounded-full w-10 h-10 float-right bg-gray-200 p-0 border-0 inline-flex items-center justify-center text-gray-500 ml-4">
-                  <svg
-                    fill="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="w-5 h-5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"></path>
-                  </svg>
-                </button> */}
+                <button
+                  className="text-white bg-lolGold1 hover:bg-lolGold2 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 mx-5"
+                  onClick={handleLikeToggle}
+                >
+                  {isLiked ? "좋아요 취소" : "좋아요"}
+                </button>
               </div>
             </div>
           </div>
